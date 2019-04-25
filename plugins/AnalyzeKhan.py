@@ -12,32 +12,32 @@ class AnalyzeKhanPlugin(Plugin):
         migrationhelper = MigrationHelper(self.get_server_id(event))
         migrationhelper.check_for_updates()
 
-    @Plugin.command('!help')
+    @Plugin.command('help')
     def help(self, event):
         helptext = "``` \n"
-        helptext += "!help output: \n"
+        helptext += "help output: \n"
         helptext +=" \n"
-        helptext += "@AnalyzeKhan !logchannel #channelname | Sets the channel which should be scanned by AnalyzeKhan \n"
-        helptext += "@AnalyzeKhan !outputchannel #channelname | Sets the channel in which AnalyzeKhan will send its messages \n"
-        helptext +=" @AnalyzeKhan !addkeyword <keyword> <response> | Will set a certain response for the specified keyword \n"
-        helptext +=" @AnalyzeKhan !removekeyword <keyword> | will remove a certain keyword including its response \n"
-        helptext +=" @AnalyzeKhan !showkeywords | will show the current list of keywords \n"
-        helptext += "@AnalyzeKhan !adminonlycontrol true/false | to allow or disallow non-admin members of the discord to use @AnalyzeKhan !commands \n"
+        helptext += "@AnalyzeKhan logchannel #channelname | Sets the channel which should be scanned by AnalyzeKhan \n"
+        helptext += "@AnalyzeKhan outputchannel #channelname | Sets the channel in which AnalyzeKhan will send its messages \n"
+        helptext += "@AnalyzeKhan addkeyword <keyword> <response> | Will set a certain response for the specified keyword \n"
+        helptext += "@AnalyzeKhan removekeyword <keyword> | will remove a certain keyword including its response \n"
+        helptext += "@AnalyzeKhan showkeywords | will show the current list of keywords \n"
+        helptext += "@AnalyzeKhan adminonlycontrol true/false | to allow or disallow non-admin members of the discord to use @AnalyzeKhan commands \n"
         helptext += "```"
         event.msg.reply(helptext)
 
-    @Plugin.command('!adminonlycontrol')
+    @Plugin.command('adminonlycontrol')
     def command_set_adminonlycontrol(self, event):
         if not self.is_allowed(event):
             return
-        value = event.msg.content.split('!adminonlycontrol')[1].lower().strip()
+        value = event.msg.content.split('adminonlycontrol')[1].lower().strip()
         if value in ['true', 'false']:
             jsonstorage.add(self.get_server_id(event), Constants.adminonlycontrol.fget(), value)
             event.msg.reply('Admin-only-control set to: {}'.format(value))
         else:
             event.msg.reply('Received: {}, only accepts true/false'.format(value))
 
-    @Plugin.command('!logchannel')
+    @Plugin.command('logchannel')
     def command_set_urlinputchannel(self, event):
         if not self.is_allowed(event):
             return
@@ -51,7 +51,7 @@ class AnalyzeKhanPlugin(Plugin):
         else:
             event.msg.reply('No channel detected')
 
-    @Plugin.command('!outputchannel')
+    @Plugin.command('outputchannel')
     def command_set_urloutputchannel(self, event):
         if not self.is_allowed(event):
             return
@@ -80,10 +80,21 @@ class AnalyzeKhanPlugin(Plugin):
             output_channel_id = int(jsonstorage.get(self.get_server_id(event), Constants.output_channel.fget()))
             output_channel = self.bot.client.state.channels.get(output_channel_id)
             if self.is_valid_server_channel_id(output_channel_id):
-                for keyword in keywords:
-                    output_channel.send_message(get_respone(keyword))
+                keywords = self.get_triggered_keywords(self.get_server_id(event), event.message.content)
+                for word in event.message.content.split(' '):
+                    if word in keywords:
+                        response = self.get_triggered_response(self.get_server_id(event), word)
+                        event.reply(response)
         else:
             event.reply("No outputchannel has been set")
+
+    def get_triggered_keywords(self, server_id, text):
+        keywordlist = jsonstorage.get(server_id, Constants.keyword_list.fget())
+        return [x for x in keywordlist]
+
+    def get_triggered_response(self, server_id, key):
+        keywordlist = jsonstorage.get(server_id, Constants.keyword_list.fget())
+        return keywordlist[key]
 
     def get_server_id(self, event):
         return event._guild.id
@@ -136,21 +147,21 @@ class AnalyzeKhanPlugin(Plugin):
         except Exception:
             return False
 
-    @Plugin.command('!showkeywords')
+    @Plugin.command('showkeywords')
     def command_set_showkeywords(self, event):
         if not self.is_allowed(event):
             return
         keywordlist = jsonstorage.get(self.get_server_id(event), Constants.keyword_list.fget())
         event.msg.reply("Keywords: {}".format(keywordlist.items()))
 
-    @Plugin.command('!addkeyword')
+    @Plugin.command('addkeyword')
     def command_set_keywordsadd(self, event):
         if not self.is_allowed(event):
             return
-        details = event.msg.content.split("!addkeyword")[1].strip()
+        details = event.msg.content.split("addkeyword")[1].strip()
         key = details.split(" ")[0]
-        response = details.split(" ")[1]
-        if (len(urls) < 1):
+        response = details.strip(key)
+        if (len(response) < 1):
             event.msg.reply("No response given")
             return
         if not self.has_keywords(self.get_server_id(event)):
@@ -158,11 +169,11 @@ class AnalyzeKhanPlugin(Plugin):
         jsonstorage.add_to_dict(self.get_server_id(event), Constants.keyword_list.fget(), key, response)
         event.msg.reply("Added to the keyword list: {} with response: {}".format(key, response))
 
-    @Plugin.command('!removekeyword')
+    @Plugin.command('removekeyword')
     def command_set_removekeywords(self, event):
         if not self.is_allowed(event):
             return
-        details = event.msg.content.split("!removekeyword")[1].strip()
+        details = event.msg.content.split("removekeyword")[1].strip()
         name = details.split(" ")[0]
         jsonstorage.remove_from_dict(self.get_server_id(event), Constants.keyword_list.fget(), str(name))
         event.msg.reply("Removed from the keyword list: {}".format(name))

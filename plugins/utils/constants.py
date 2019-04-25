@@ -8,6 +8,9 @@ class Constants(object):
     @property
     def adminonlycontrol():
         return "admin_only"    
-	@property
+    @property
     def keyword_list():
         return "keyword_list"
+    @property
+    def migration_version():
+        return "migration_version"    

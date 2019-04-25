@@ -2,7 +2,7 @@
     "token": ""
     "bot": {
         "plugins": [
-            "plugins.analyze-khan"
+            "plugins.AnalyzeKhan"
         ]
     }
 }
