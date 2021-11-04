@@ -24,3 +24,4 @@ edit json.config to hold your discord bots token
 From the instalation folder:
 python -m disco.cli --config config.json
 
+103079292000
