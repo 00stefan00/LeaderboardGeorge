@@ -4,6 +4,7 @@ from utils import jsonstorage
 from utils.constants import Constants
 from utils.migrationhelper import MigrationHelper
 
+from datetime import datetime
 import re
 import pdb
 
@@ -22,7 +23,6 @@ class GeorgePlugin(Plugin):
         helptext += "```"
         event.msg.reply(helptext)
 
-    @Plugin.command('adminonlycontrol')
     def command_set_adminonlycontrol(self, event):
         if not self.is_allowed(event):
             return
@@ -33,7 +33,6 @@ class GeorgePlugin(Plugin):
         else:
             event.msg.reply('Received: {}, only accepts true/false'.format(value))
 
-    @Plugin.command('outputchannel')
     def command_set_urloutputchannel(self, event):
         if not self.is_allowed(event):
             return
@@ -50,14 +49,23 @@ class GeorgePlugin(Plugin):
             event.message.reply('No channel detected')
 
     def handle_keywords(self, event):
-        if ' ' not  in event.message.content:
-            return
-        if event.message.content.split(' ')[1] == 'outputchannel':
+        msg = event.message.content
+        if msg.split(' ')[0] == '/outputchannel':
             self.command_set_urloutputchannel(event)
+            return True
+        if msg.split(' ')[0] == '/adminonlycontrol':
+            self.command_set_adminonlycontrol(event)
+            return True
+        if msg.split(' ')[0] == '/record'
+            self.add_time(event)
+        return False
 
     def add_time(self, event, time):
-	import pdb
-	pdb.set_trace()
+        if self.is_numbered_channel(event):
+            record = msg.split(' ')[1]
+            time = datetime.strptime(record, '%H:%M:%S')
+	        import pdb
+	        pdb.set_trace()
 
     @Plugin.listen('MessageCreate')
     def on_message_create(self, event):
