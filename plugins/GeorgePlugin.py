@@ -56,7 +56,7 @@ class GeorgePlugin(Plugin):
         if msg.split(' ')[0] == '/adminonlycontrol':
             self.command_set_adminonlycontrol(event)
             return True
-        if msg.split(' ')[0] == '/record'
+        if msg.split(' ')[0] == '/record':
             self.add_time(event)
         return False
 
@@ -73,7 +73,7 @@ class GeorgePlugin(Plugin):
             pdb.set_trace()
             jsonstorage.add_to_dict(channel_id, 'username', time)
 
-    def get_times_for_track(self, channel_id)
+    def get_times_for_track(self, channel_id):
         jsonstorage.get(channel_id)
 
     @Plugin.listen('MessageCreate')
