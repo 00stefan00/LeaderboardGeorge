@@ -37,33 +37,42 @@ class GeorgePlugin(Plugin):
     def command_set_urloutputchannel(self, event):
         if not self.is_allowed(event):
             return
-        if '#' in event.msg.content:
-            value = re.sub("[^0-9]", " ", event.msg.content.split('#')[1]).split(' ')[0]
+        if '#' in event.message.content:
+            value = re.sub("[^0-9]", " ", event.message.content.split('#')[1]).split(' ')[0]
             if self.is_valid_server_channel_id(value):
+                if not self.has_outputchannel(self.get_server_id(event)):
+                    jsonstorage.initialize_dict(self.get_server_id(event), Constants.output_channel.fget())
                 jsonstorage.add(self.get_server_id(event), Constants.output_channel.fget(), value)
-                event.msg.reply('Set {} as outputchannel'.format(self.get_channel_name(value)))
+                event.message.reply('Set {} as outputchannel'.format(self.get_channel_name(value)))
             else:
-                event.msg.reply('Channel-name not recognized')
+                event.message.reply('Channel-name not recognized')
         else:
-            event.msg.reply('No channel detected')
+            event.message.reply('No channel detected')
+
+    def handle_keywords(self, event):
+        if ' ' not  in event.message.content:
+            return
+        if event.message.content.split(' ')[1] == 'outputchannel':
+            self.command_set_urloutputchannel(event)
+
+    def add_time(self, event, time):
+	import pdb
+	pdb.set_trace()
 
     @Plugin.listen('MessageCreate')
     def on_message_create(self, event):
         self.initialize(event)
-
         if self.is_bot(event):
             return
-        if self.is_numbered_channel(event):
-            import pdb
-            pdb.set_trace()
-
+        if self.handle_keywords(event):
+            return
         if self.has_outputchannel(self.get_server_id(event)):
             output_channel_id = int(jsonstorage.get(self.get_server_id(event), Constants.output_channel.fget()))
             output_channel = self.bot.client.state.channels.get(output_channel_id)
             if self.is_valid_server_channel_id(output_channel_id):
-                import pdb
-                pdb.set_trace()
-                    
+                if(self.is_numbered_channel(event)):
+                    if str(event.message.content).startswith('add'):
+                        self.add_time(event, str(event.message.content).split('add')[1])
         else:
             event.reply("No outputchannel has been set")
 
@@ -81,6 +90,10 @@ class GeorgePlugin(Plugin):
             if channel.id == int(channel_id):
                 return '#{}'.format(channel.name)
         return ''
+
+    def is_numbered_channel(self, event):
+        channel_id = event.raw_data['message']['channel_id']
+        return self.get_channel_name(channel_id).strip('#')[:1].isdigit()
 
     def is_bot(self, event):
         return (self.bot.client.state.me.id == int(event.raw_data['message']['author']['id']))
