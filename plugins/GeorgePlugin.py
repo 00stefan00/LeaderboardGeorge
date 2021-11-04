@@ -56,16 +56,25 @@ class GeorgePlugin(Plugin):
         if msg.split(' ')[0] == '/adminonlycontrol':
             self.command_set_adminonlycontrol(event)
             return True
-        if msg.split(' ')[0] == '/record'
+        if msg.split(' ')[0] == '/record':
             self.add_time(event)
         return False
 
     def add_time(self, event, time):
         if self.is_numbered_channel(event):
             record = msg.split(' ')[1]
-            time = datetime.strptime(record, '%H:%M:%S')
-	        import pdb
-	        pdb.set_trace()
+            try:
+                time = datetime.strptime(record, '%H:%M:%S')
+            except Exception:
+                event.message.reply('Received: {}, only accepts times in HH:MM:SS format'.format(record))
+                return
+            channel_id = event.raw_data['message']['channel_id'] 
+            import pdb
+            pdb.set_trace()
+            jsonstorage.add_to_dict(channel_id, 'username', time)
+
+    def get_times_for_track(self, channel_id):
+        jsonstorage.get(channel_id)
 
     @Plugin.listen('MessageCreate')
     def on_message_create(self, event):
